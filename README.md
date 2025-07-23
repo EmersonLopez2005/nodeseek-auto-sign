@@ -60,9 +60,8 @@ Widget Mode: Managed
 复制生成的 Site Key → 填入 CLIENTT_KEY
 
 4. 验证码服务部署（可选）
-如果需要破解 Turnstile 验证码，二选一：
+如果需要破解 Turnstile 验证码
 
-方案 A：使用 CloudFreed（默认）
 # 在青龙容器内运行验证服务
 docker exec -it qinglong bash
 git clone https://github.com/EmersonLopez2005/cloudfreed.git
