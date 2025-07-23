@@ -101,8 +101,6 @@ docker exec qinglong python3 /ql/scripts/nodeseek_sign.py
 ---
 
 > **无公网 IP，本地 CloudFreed 全自动完成 NodeSeek 签到。**
-```
-
 
 [![GitHub stars](https://img.shields.io/github/stars/EmersonLopez2005/nodeseek-auto-sign?style=flat-square)](https://github.com/EmersonLopez2005/nodeseek-auto-sign/stargazers)
 [![Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/)
