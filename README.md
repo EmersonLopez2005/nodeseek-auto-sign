@@ -61,8 +61,8 @@ nohup node server.js > /dev/null 2>&1 &
 
 | 变量名 | 示例值 | 说明 |
 |---|---|---|
-| `USER1` | `alice@email.com` | 主账号邮箱 |
-| `PASS1` | `mySecretPwd` | 主账号密码 |
+| `USER1` | `alice` | 账号 |
+| `PASS1` | `mySecretPwd` | 密码 |
 | `USER2` / `PASS2` | … / … | 第二个账号（可选） |
 | `CLIENTT_KEY` | `0x4AAAAAAAbCdEfGhIjKl` | **Cloudflare Turnstile Site Key** |
 | `SOLVER_TYPE` | `turnstile` | **固定值** |
