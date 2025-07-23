@@ -33,9 +33,9 @@ docker exec -it qinglong bash
 ```bash
 pip3 install requests
 
-curl -o /ql/scripts/nodeseek_sign.py \
+curl -o /ql/data/scripts/nodeseek_sign.py \
   https://raw.githubusercontent.com/EmersonLopez2005/nodeseek-auto-sign/main/sign.py
-chmod +x /ql/scripts/nodeseek_sign.py
+chmod +x /ql/data/scripts/nodeseek_sign.py
 ```
 
 ---
@@ -82,7 +82,7 @@ nohup node server.js > /dev/null 2>&1 &
 
 ## 🧪 立即测试
 ```bash
-docker exec qinglong python3 /ql/scripts/nodeseek_sign.py
+docker exec qinglong python3 /ql/data/scripts/nodeseek_sign.py
 ```
 
 ---
@@ -99,7 +99,7 @@ docker exec qinglong python3 /ql/scripts/nodeseek_sign.py
 
 ## 📄 脚本与验证服务
 - 签到脚本：`https://raw.githubusercontent.com/EmersonLopez2005/nodeseek-auto-sign/main/sign.py`  
-- CloudFreed 仓库：`https://github.com/EmersonLopez2005/cloudfreed`
+- CloudFreed 服务：`[https://github.com/EmersonLopez2005/cloudfreed](https://raw.githubusercontent.com/EmersonLopez2005/nodeseek-auto-sign/main/cloudfreed/server.js)`
 
 ---
 
