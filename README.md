@@ -43,10 +43,13 @@ chmod +x /ql/scripts/nodeseek_sign.py
 ### ③ 部署 CloudFreed（Turnstile 验证服务）
 仍在容器内：
 ```bash
-# 克隆并启动
-git clone https://github.com/EmersonLopez2005/cloudfreed.git /ql/cloudfreed
+mkdir -p /ql/cloudfreed
+curl -o /ql/cloudfreed/server.js \
+  https://raw.githubusercontent.com/EmersonLopez2005/nodeseek-auto-sign/main/cloudfreed/server.js
+
 cd /ql/cloudfreed
-npm install
+npm init -y
+npm install express
 nohup node server.js > /dev/null 2>&1 &
 ```
 验证服务已监听 `http://localhost:3000`。
