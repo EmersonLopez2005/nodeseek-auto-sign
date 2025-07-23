@@ -2,7 +2,6 @@
 nodeseek-auto-sign
 部署步骤（以青龙面板为例）
 1. 基础环境准备
-bash
 # 进入青龙容器
 docker exec -it qinglong bash
 
