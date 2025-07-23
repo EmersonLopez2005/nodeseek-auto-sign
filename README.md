@@ -1,12 +1,11 @@
 # nodeseek-auto-sign
 nodeseek-auto-sign
-部署步骤（以青龙面板为例）
 1. 基础环境准备
 # 进入青龙容器
 docker exec -it qinglong bash
-
 # 安装 Python 依赖
 pip3 install requests
+
 2. 添加脚本文件
 在青龙面板创建新脚本：
 
