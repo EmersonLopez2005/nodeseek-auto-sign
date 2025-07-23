@@ -88,8 +88,6 @@ docker exec qinglong python3 /ql/scripts/nodeseek_sign.py
 3. 提交更改 (`git commit -m 'Add some feature'`)
 4. 推送到分支 (`git push origin feature/your-feature`)
 5. 创建 Pull Request
-```
-
 [![GitHub stars](https://img.shields.io/github/stars/EmersonLopez2005/nodeseek-auto-sign?style=flat-square)](https://github.com/EmersonLopez2005/nodeseek-auto-sign/stargazers)
 [![Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/)
 
