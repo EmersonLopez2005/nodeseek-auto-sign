@@ -90,21 +90,6 @@ docker exec qinglong python3 /ql/scripts/nodeseek_sign.py
 5. 创建 Pull Request
 ```
 
-## 实际部署建议
-
-1. **添加截图**：
-   - 替换 `https://user-images.githubusercontent.com/.../turnstile-config.png` 为实际截图链接
-   - 建议使用 GitHub 仓库内图片（创建 `/images` 目录存放）
-
-2. **优化目录结构**：
-```bash
-nodeseek-auto-sign/
-├── sign.py             # 主脚本
-├── README.md           # 说明文档
-└── images/             # 图片目录
-    └── turnstile-config.png
-```
-
 [![GitHub stars](https://img.shields.io/github/stars/EmersonLopez2005/nodeseek-auto-sign?style=flat-square)](https://github.com/EmersonLopez2005/nodeseek-auto-sign/stargazers)
 [![Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/)
 
