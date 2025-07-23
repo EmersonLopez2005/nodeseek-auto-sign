@@ -46,15 +46,39 @@ pip3 install requests
    CLIENTT_KEY = "您的 Turnstile Site Key"
    SOLVER_TYPE = "turnstile"  # 固定值
 
+3. 🔧 Cloudflare Turnstile 配置指南
+访问 Cloudflare Turnstile
+
+点击 "Add Site"
+
+配置站点：
+
+Site name: NodeSeek-AutoSign
+
+Domain: www.nodeseek.com (或留空)
+
+Widget Mode: Managed
+
+复制生成的 Site Key → 填入 CLIENTT_KEY
+
 4. 验证码服务部署（可选）
 如果需要破解 Turnstile 验证码，二选一：
 
 方案 A：使用 CloudFreed（默认）
-
-bash
 # 在青龙容器内运行验证服务
 docker exec -it qinglong bash
 git clone https://github.com/EmersonLopez2005/cloudfreed.git
 cd cloudfreed
 npm install
 node server.js  # 保持后台运行
+
+5. 设置定时任务
+在青龙面板 → 定时任务：
+
+名称：NodeSeek 自动签到
+
+命令：task nodeseek_sign.py
+
+定时规则：10 0 * * * (每天 00:10 执行)
+
+保存并立即运行测试
