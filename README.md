@@ -68,8 +68,6 @@ docker exec qinglong curl http://localhost:3000
    - Widget Mode: Managed
 4. 复制生成的 **Site Key** → 填入 `CLIENTT_KEY`
 
-![Turnstile 配置界面](https://user-images.githubusercontent.com/.../turnstile-config.png)
-
 ## 🔧 故障排查
 ### 常见错误解决方案
 | 错误信息 | 解决方案 |
