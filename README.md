@@ -1,17 +1,14 @@
-# nodeseek-auto-sign
 
-```markdown
-# NodeSeek 自动签到  
-**iStoreOS 青龙面板 + CloudFreed（Turnstile）版**
+# NodeSeek 自动签到（FlareSolverr 版）
 
-> 账号密码 → 自建 CloudFreed 验证服务 → 自动拿 Cookie → 签到 → Telegram 推送  
+> **账号密码 → FlareSolverr 绕过 Cloudflare → 本地 CloudFreed 破解 Turnstile → 自动签到 → TG 推送**  
 > **无需公网 IP，家宽即可跑。**
 
 ---
 
 ## 🚀 一键部署（4 步）
 
-### ① 安装青龙面板（iStoreOS）
+### ① 安装青龙面板
 ```bash
 docker run -d \
   --name qinglong \
@@ -20,7 +17,7 @@ docker run -d \
   --restart unless-stopped \
   whyour/qinglong:latest
 ```
-访问 `http://<iStoreOS_IP>:5700` 完成初始化。
+浏览器访问 `http://<IP>:5700` 完成初始化。
 
 ---
 
@@ -28,83 +25,91 @@ docker run -d \
 进入容器：
 ```bash
 docker exec -it qinglong bash
-```
-依次执行：
-```bash
 pip3 install requests
-
-curl -o /ql/data/scripts/nodeseek_sign.py \
-  https://raw.githubusercontent.com/EmersonLopez2005/nodeseek-auto-sign/main/sign.py
-chmod +x /ql/data/scripts/nodeseek_sign.py
+curl -o /ql/data/scripts/sign.py \
+  https://raw.githubusercontent.com/EmersonLopez2005/nodeseek-auto-sign/main/sign_flare.py
+chmod +x /ql/data/scripts/sign.py
 ```
 
 ---
 
-### ③ 部署 CloudFreed（Turnstile 验证服务）
-仍在容器内：
+### ③ 部署 FlareSolverr & CloudFreed
+**FlareSolverr**（用于绕过 Cloudflare 5 秒盾）：
 ```bash
+# 宿主机执行
+docker run -d \
+  --name flaresolverr \
+  --network host \
+  -e LOG_LEVEL=info \
+  --restart unless-stopped \
+  ghcr.io/flaresolverr/flaresolverr:latest
+```
+
+**CloudFreed**（本地 Turnstile 验证码服务）：
+```bash
+# 仍在容器内
 mkdir -p /ql/cloudfreed
 curl -o /ql/cloudfreed/server.js \
   https://raw.githubusercontent.com/EmersonLopez2005/nodeseek-auto-sign/main/cloudfreed/server.js
-
 cd /ql/cloudfreed
 npm init -y
 npm install express
 nohup node server.js > /dev/null 2>&1 &
 ```
-验证服务已监听 `http://localhost:3000`。
+验证：
+```bash
+curl http://localhost:3000   # CloudFreed
+curl http://localhost:8191/health  # FlareSolverr
+```
 
 ---
 
 ### ④ 配置环境变量
-**路径：青龙面板 → 环境变量 → 新建**
+**路径：青龙面板 → 环境变量 → 新增**
 
-| 变量名 | 示例值 | 说明 |
-|---|---|---|
-| `USER1` | `alice` | 账号 |
-| `PASS1` | `mySecretPwd` | 密码 |
-| `USER2` / `PASS2` | … / … | 第二个账号（可选） |
-| `CLIENTT_KEY` | `0x4AAAAAAAbCdEfGhIjKl` | **Cloudflare Turnstile Site Key** |
-| `SOLVER_TYPE` | `turnstile` | **固定值** |
-| `API_BASE_URL` | `http://localhost:3000` | **本地 CloudFreed 地址** |
-| `TG_BOT_TOKEN` | `123456:ABC-DEF1234ghI` | Telegram Bot Token（可选） |
-| `TG_USER_ID` | `987654321` | Telegram 用户 ID（可选） |
+| 变量名         | 示例值                           | 说明 |
+|----------------|----------------------------------|------|
+| `USER1`        | `alice@mail.com`                | 账号 |
+| `PASS1`        | `mySecretPwd`                   | 密码 |
+| `CLIENTT_KEY`  | `0x4AAAAAAAbCdEfGhIjKl`         | Turnstile Site Key |
+| `SOLVER_TYPE`  | `turnstile`                     | 固定值 |
+| `API_BASE_URL` | `http://localhost:3000`         | CloudFreed 地址 |
+| `TG_BOT_TOKEN` | `123456:ABC-DEF1234ghI`         | TG Bot Token（可选） |
+| `TG_USER_ID`   | `987654321`                     | TG 用户 ID（可选） |
 
 ---
 
 ## ⏰ 定时任务
 **路径：青龙面板 → 定时任务 → 新增**
-- **名称**：`NodeSeek 自动签到`
-- **命令**：`task nodeseek_sign.py`
+- **名称**：NodeSeek 自动签到（FlareSolverr 版）
+- **命令**：`task sign.py`
 - **定时规则**：`10 0 * * *`（每天 00:10）
 
 ---
 
 ## 🧪 立即测试
 ```bash
-docker exec qinglong python3 /ql/data/scripts/nodeseek_sign.py
+docker exec qinglong python3 /ql/data/scripts/sign.py
 ```
 
 ---
 
 ## 🔧 故障排查
-
 | 现象 | 解决 |
 |---|---|
-| `未找到 token 或 sitekey` | 检查 NodeSeek 登录页结构变化 |
-| `验证码破解失败` | 确认 CloudFreed 服务已启动 `curl http://localhost:3000` |
-| `登录失败` | 检查账号密码、确认 Turnstile Site Key 正确 |
+| `Connection refused: 8191` | FlareSolverr 未启动或未映射 8191 |
+| `未找到 token 或 sitekey` | NodeSeek 登录页结构变化，更新正则 |
+| `验证码破解失败` | 检查 CloudFreed 服务 `curl http://localhost:3000` |
+| `登录失败` | 检查账号密码、Turnstile Site Key |
 
 ---
 
-## 📄 脚本与验证服务
-- 签到脚本：`https://raw.githubusercontent.com/EmersonLopez2005/nodeseek-auto-sign/main/sign.py`  
-- CloudFreed 服务：`[https://github.com/EmersonLopez2005/cloudfreed](https://raw.githubusercontent.com/EmersonLopez2005/nodeseek-auto-sign/main/cloudfreed/server.js)`
+## 📄 相关文件
+- 签到脚本：`https://raw.githubusercontent.com/EmersonLopez2005/nodeseek-auto-sign/main/sign_flare.py`
+- CloudFreed 服务：`https://raw.githubusercontent.com/EmersonLopez2005/nodeseek-auto-sign/main/cloudfreed/server.js`
+- FlareSolverr：`https://github.com/FlareSolverr/FlareSolverr`
 
 ---
 
-> **无公网 IP，本地 CloudFreed 全自动完成 NodeSeek 签到。**
-
-[![GitHub stars](https://img.shields.io/github/stars/EmersonLopez2005/nodeseek-auto-sign?style=flat-square)](https://github.com/EmersonLopez2005/nodeseek-auto-sign/stargazers)
-[![Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/)
-
+> **无公网 IP，本地 FlareSolverr + CloudFreed 全自动完成 NodeSeek 签到。**
+```
