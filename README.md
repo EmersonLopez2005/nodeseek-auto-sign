@@ -18,27 +18,33 @@ pip3 install requests
 内容：粘贴完整代码
 
 3. 配置环境变量
-在青龙面板 → 环境变量 添加：
+## 🛠️ 环境变量配置
 
-变量名	示例值	必填	说明
-USER1	your@email.com	✔️	主账号邮箱
-PASS1	your_password	✔️	主账号密码
-CLIENTT_KEY	0x4AAAAAA...	❌	Turnstile Site Key
-SOLVER_TYPE	turnstile	❌	固定值
-API_BASE_URL	http://localhost:3000	❌	自建验证服务地址
-TG_BOT_TOKEN	123456:ABC-DEF	❌	Telegram 机器人 Token
-TG_USER_ID	987654321	❌	Telegram 用户 ID
-📌 关键细节：
+在青龙面板 → 环境变量 中添加以下变量：
 
-多账号支持：添加 USER2/PASS2, USER3/PASS3 等
+| 变量名          | 示例值                  | 必填 | 说明                                                                 |
+|-----------------|-------------------------|------|----------------------------------------------------------------------|
+| `USER1`         | your@email.com          | ✔️   | 主账号邮箱                                                           |
+| `PASS1`         | your_password           | ✔️   | 主账号密码                                                           |
+| `USER2`         | another@email.com       | ❌   | 第二个账号邮箱（多账号支持）                                         |
+| `PASS2`         | another_password        | ❌   | 第二个账号密码                                                       |
+| `CLIENTT_KEY`   | 0x4AAAAAAAbCdEfGhIjKl   | ❌   | Turnstile Site Key ([获取方法](#cloudflare-turnstile-配置指南))      |
+| `SOLVER_TYPE`   | turnstile               | ❌   | 验证码解决类型（固定值 `turnstile`）                                 |
+| `API_BASE_URL`  | http://localhost:3000   | ❌   | 自建验证服务地址（默认使用项目自带服务）                             |
+| `TG_BOT_TOKEN`  | 123456:ABC-DEF1234ghI   | ❌   | Telegram 机器人 Token ([创建教程](https://core.telegram.org/bots)) |
+| `TG_USER_ID`    | 987654321               | ❌   | Telegram 用户 ID ([获取方法](https://t.me/userinfobot))            |
 
-验证码配置：
+### 📌 使用说明
 
-如果 Nodeseek 有验证码：必须配置 CLIENTT_KEY + SOLVER_TYPE=turnstile
+1. **基础必填**：
+   - 至少需要配置 `USER1` 和 `PASS1`
+   - 多账号按顺序添加 `USER2/PASS2`, `USER3/PASS3`...
 
-无验证码：留空即可
-
-Telegram 通知：按需配置
+2. **验证码配置**：
+   ```bash
+   # 仅当 Nodeseek 启用验证码时需要
+   CLIENTT_KEY = "您的 Turnstile Site Key"
+   SOLVER_TYPE = "turnstile"  # 固定值
 
 4. 验证码服务部署（可选）
 如果需要破解 Turnstile 验证码，二选一：
