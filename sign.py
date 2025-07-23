@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-NodeSeek 自动签到脚本
-支持账号密码登录、验证码破解、Telegram推送
+NodeSeek 自动签到脚本（FlareSolverr 版）
+- FlareSolverr 绕过 Cloudflare 5 秒盾
+- 多账号、TG 推送
 """
 import os
 import re
 import json
 import time
 import requests
-from typing import List, Tuple
+from typing import List
 
-# ========== 基础配置 ==========
+# ========= 常量 =========
 NS_LOGIN_URL = "https://www.nodeseek.com/auth/login"
 NS_SIGN_URL  = "https://www.nodeseek.com/api/attendance"
-UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+FLARE_URL    = "http://localhost:8191/v1"
+UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+      "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36")
 
-# ========== 工具函数 ==========
+# ========= 工具函数 =========
 def log(msg: str) -> None:
     print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}")
 
@@ -29,94 +32,97 @@ def tg_notify(text: str) -> None:
     data = {"chat_id": chat, "text": text, "parse_mode": "Markdown"}
     requests.post(url, json=data, timeout=10)
 
-# ========== 验证码破解 ==========
-def solve_turnstile(site_key: str, page_url: str) -> str:
+def flare_get(url: str) -> str:
     """
-    通过 CloudFreed / YesCaptcha 破解 Turnstile
-    site_key: NodeSeek 登录页的 data-sitekey
+    用 FlareSolverr 绕过 CF，返回页面源码
     """
-    client_key = os.getenv("CLIENTT_KEY")
-    solver     = os.getenv("SOLVER_TYPE", "turnstile")
-    if solver == "yescaptcha":
-        api = "https://api.yescaptcha.com/createTask"
-        payload = {
-            "clientKey": client_key,
-            "task": {"type": "TurnstileTaskProxyless",
-                     "websiteURL": page_url,
-                     "websiteKey": site_key}
-        }
-    else:  # CloudFreed
-        api = os.getenv("API_BASE_URL", "http://localhost:3000") + "/solve"
-        payload = {"site_key": site_key, "page_url": page_url}
-    r = requests.post(api, json=payload, timeout=60).json()
-    return r.get("solution", {}).get("token") or r.get("token") or ""
-
-# ========== 登录 ==========
-def login(username: str, password: str) -> str:
-    sess = requests.Session()
-    sess.headers.update({"User-Agent": UA})
-
-    # 1. 拉登录页拿 token & sitekey
-    login_page = sess.get(NS_LOGIN_URL).text
-    token_match = re.search(r'name="_token"\s+value="([^"]+)"', login_page)
-    sitekey_match = re.search(r'data-sitekey="([^"]+)"', login_page)
-    if not (token_match and sitekey_match):
-        raise RuntimeError("未找到 token 或 sitekey")
-    _token = token_match.group(1)
-    sitekey = sitekey_match.group(1)
-
-    # 2. 破解验证码
-    cf_response = solve_turnstile(sitekey, NS_LOGIN_URL)
-    if not cf_response:
-        raise RuntimeError("验证码破解失败")
-
-    # 3. 提交登录
-    login_data = {
-        "_token": _token,
-        "email": username,
-        "password": password,
-        "cf-turnstile-response": cf_response
+    payload = {
+        "cmd": "request.get",
+        "url": url,
+        "maxTimeout": 60000
     }
-    login_resp = sess.post(NS_LOGIN_URL, data=login_data, allow_redirects=False)
-    if login_resp.status_code != 302:
-        raise RuntimeError("登录失败，检查账号密码/验证码")
+    r = requests.post(FLARE_URL, json=payload, timeout=70).json()
+    return r["solution"]["response"]
 
-    # 4. 提取 Cookie
-    cookies = [f"{c.name}={c.value}" for c in sess.cookies]
-    return "; ".join(cookies)
-
-# ========== 签到 ==========
-def sign(cookie: str, name: str) -> str:
+def flare_post(url: str, data: dict, cookie: str = "") -> dict:
+    """
+    用 FlareSolverr POST（携带 cookie）
+    """
     headers = {
         "User-Agent": UA,
         "Referer": "https://www.nodeseek.com/board",
-        "Cookie": cookie
+        "Origin": "https://www.nodeseek.com",
+        "Content-Type": "application/json"
     }
-    r = requests.post(NS_SIGN_URL, headers=headers, json={}, timeout=10)
-    data = r.json()
-    msg = data.get("message", "unknown")
-    return "✅" if "签到收益" in msg else "❌", msg
+    if cookie:
+        headers["Cookie"] = cookie
 
-# ========== 主流程 ==========
-def main() -> None:
-    results: List[str] = []
-    success = 0
-    # 扫描 USER1/USER2...PASS1/PASS2...
+    payload = {
+        "cmd": "request.post",
+        "url": url,
+        "headers": headers,
+        "postData": json.dumps(data, separators=(',', ':')),
+        "maxTimeout": 60000
+    }
+    r = requests.post(FLARE_URL, json=payload, timeout=70).json()
+    return json.loads(r["solution"]["response"] or "{}")
+
+# ========= 登录 =========
+def login(email: str, pwd: str) -> str:
+    # 1. 拉登录页（已绕过 CF）
+    html = flare_get(NS_LOGIN_URL)
+
+    # 2. 提取 _token & sitekey
+    token   = re.search(r'name="_token"\s+value="([^"]+)"', html)
+    sitekey = re.search(r'data-sitekey="([^"]+)"', html)
+    if not (token and sitekey):
+        raise RuntimeError("未找到 token 或 sitekey")
+    _token  = token.group(1)
+    sitekey = sitekey.group(1)
+
+    # 3. 本地 CloudFreed 破解
+    cf_token = solve_turnstile(sitekey, NS_LOGIN_URL)
+    if not cf_token:
+        raise RuntimeError("验证码破解失败")
+
+    # 4. 提交登录
+    data = {
+        "_token": _token,
+        "email": email,
+        "password": pwd,
+        "cf-turnstile-response": cf_token
+    }
+    resp = flare_post(NS_LOGIN_URL, data)
+    if "签到收益" not in json.dumps(resp):
+        raise RuntimeError("登录失败，请检查账号密码/验证码")
+
+    # 5. 返回 cookie（FlareSolverr 已带 cookie）
+    return resp.get("cookie", "") or ""
+
+# ========= 签到 =========
+def sign(cookie: str, name: str) -> tuple:
+    resp = flare_post(NS_SIGN_URL, {}, cookie)
+    msg = resp.get("message", "unknown")
+    return ("✅", msg) if "签到收益" in msg else ("❌", msg)
+
+# ========= 主流程 =========
+def main():
+    results, success = [], 0
     idx = 1
     while True:
-        user = os.getenv(f"USER{idx}")
-        pwd  = os.getenv(f"PASS{idx}")
-        if not user:
+        email = os.getenv(f"USER{idx}")
+        pwd   = os.getenv(f"PASS{idx}")
+        if not email:
             break
         try:
-            log(f"开始登录 {user}")
-            cookie = login(user, pwd)
-            flag, msg = sign(cookie, user)
-            results.append(f"{flag} {user}：{msg}")
+            log(f"开始登录 {email}")
+            cookie = login(email, pwd)
+            flag, msg = sign(cookie, email)
+            results.append(f"{flag} {email}：{msg}")
             if flag == "✅":
                 success += 1
         except Exception as e:
-            results.append(f"❌ {user}：{e}")
+            results.append(f"❌ {email}：{e}")
         idx += 1
 
     if not results:
