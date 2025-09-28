@@ -1,162 +1,157 @@
-# 自动签到脚本使用说明
+```markdown
+# 多站点Cookie签到脚本
 
-## 脚本说明
+支持NodeSeek和DeepFlood两个站点的多账户Cookie签到，解决Telegram通知频繁发送问题。
 
-我为你创建了三个脚本来解决你的问题：
+## 特点
+- ✅ 纯Cookie登录，避免CF机器人检测
+- ✅ 双站点支持（NodeSeek + DeepFlood）
+- ✅ 多账户管理
+- ✅ 通知优化（每天只发送一次汇总）
 
-1. **nodeseek_sign_improved.py** - 改进版综合脚本，支持NodeSeek和DeepFlood两个站点
-2. **deepflood_sign.py** - 专门针对DeepFlood站点的独立脚本
-3. **nodeseek_sign.py** - 你的原始脚本（保持不变）
+## 青龙面板使用
 
-## 主要改进
-
-### 1. 解决Telegram通知频繁发送问题
-
-**问题原因：**
-- 原脚本每个账号签到后都会发送通知
-- 登录失败时也会发送通知
-- 没有通知去重机制
-
-**解决方案：**
-- 添加了通知状态管理，每天只发送一次汇总通知
-- 使用JSON文件记录通知发送状态
-- 汇总所有账号的签到结果后统一发送
-
-### 2. 添加DeepFlood站点支持
-
-- 新增DeepFlood站点配置
-- 支持多站点统一管理
-- 可以选择使用综合脚本或独立脚本
-
-## 环境变量配置
-
-### NodeSeek站点（原有配置保持不变）
+### 1. 拉取脚本
 ```bash
-# 单账号配置
-USER=你的用户名
-PASS=你的密码
-NS_COOKIE=你的Cookie（可选，脚本会自动获取）
-
-# 多账号配置
-USER1=账号1用户名
-PASS1=账号1密码
-USER2=账号2用户名  
-PASS2=账号2密码
-# ... 以此类推
-
-# 验证码相关
-SOLVER_TYPE=turnstile  # 或 yescaptcha
-API_BASE_URL=你的API地址
-CLIENTT_KEY=你的客户端密钥
-NS_RANDOM=true
+ql repo https://github.com/EmersonLopez2005/nodeseek-auto-sign.git
 ```
-
-### DeepFlood站点（新增配置）
-```bash
-# 单账号配置
-DF_USER=你的DeepFlood用户名
-DF_PASS=你的DeepFlood密码
-DF_COOKIE=你的DeepFlood Cookie（可选）
-
-# 多账号配置
-DF_USER1=账号1用户名
-DF_PASS1=账号1密码
-DF_USER2=账号2用户名
-DF_PASS2=账号2密码
-# ... 以此类推
-```
-
-## 使用方式
-
-### 方式1：使用综合脚本（推荐）
-```bash
-python nodeseek_sign_improved.py
-```
-这个脚本会同时处理NodeSeek和DeepFlood两个站点的签到。
-
-### 方式2：使用独立脚本
-```bash
-# 只签到NodeSeek
-python nodeseek_sign.py
-
-# 只签到DeepFlood  
-python deepflood_sign.py
-```
-
-## 青龙面板配置
-
-### 1. 上传脚本
-将脚本文件上传到青龙面板的脚本目录。
 
 ### 2. 配置环境变量
-在青龙面板的环境变量中添加上述配置。
+```bash
+# NodeSeek Cookie（多个用&分隔）
+NS_COOKIE=cookie1&cookie2&cookie3
+
+# DeepFlood Cookie（多个用&分隔）
+DF_COOKIE=cookie1&cookie2&cookie3
+
+# Telegram通知配置
+TG_BOT_TOKEN=你的机器人Token
+TG_USER_ID=你的用户ID
+```
 
 ### 3. 添加定时任务
 ```bash
-# 综合脚本（推荐）
-30 8 * * * python3 /ql/scripts/nodeseek_sign_improved.py
-
-# 或者分别运行
-30 8 * * * python3 /ql/scripts/nodeseek_sign.py
-35 8 * * * python3 /ql/scripts/deepflood_sign.py
+30 8 * * * python3 /ql/scripts/EmersonLopez2005/multi_site_sign_cookie_only.py
 ```
 
-## 通知优化说明
+## Cookie获取方法
+1. 浏览器登录对应网站
+2. F12 → Network → 找到请求 → Headers → Cookie
+3. 复制完整Cookie值到环境变量
 
-### 新的通知机制
-1. **每日汇总**：每天只发送一次汇总通知，包含所有账号的签到结果
-2. **状态记录**：使用JSON文件记录通知发送状态，避免重复发送
-3. **详细信息**：通知包含签到成功/失败统计和详细的收益信息
-
-### 通知内容示例
-```
-NodeSeek 签到汇总
-成功: 2 个账号
-失败: 0 个账号
-
-账号1: 签到成功，获得 5 个鸡腿
-  近30天已签到25天，共获得125个鸡腿
-
-账号2: 签到成功，获得 3 个鸡腿  
-  近30天已签到23天，共获得98个鸡腿
+## 通知配置
+脚本使用notify.py模块发送通知，支持多种通知方式。
 ```
 
-## 文件结构
+### 3. .gitignore（可选）
+```gitignore
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# 运行时文件
+cookie/
+*.log
+*.txt
+
+# 环境变量
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
 ```
-NodeSeek-Signin-main/
-├── nodeseek_sign.py              # 原始脚本
-├── nodeseek_sign_improved.py     # 改进版综合脚本
-├── deepflood_sign.py             # DeepFlood独立脚本
-├── README.md                     # 使用说明
-└── cookie/                       # Cookie和状态文件目录
-    ├── NS_COOKIE.txt            # NodeSeek Cookie文件
-    ├── DF_COOKIE.txt            # DeepFlood Cookie文件
-    ├── notification_status.json  # 通知状态文件
-    └── deepflood_notification_status.json
+
+## 🔔 Telegram通知配置
+
+### Telegram通知在notify.py文件中
+
+你需要在青龙面板配置以下环境变量来启用Telegram通知：
+
+```bash
+# 必需的Telegram配置
+TG_BOT_TOKEN=你的机器人Token        # 例：1407203283:AAG9rt-6RDaaX0HBLZQq0laNOh898iFYaRQ
+TG_USER_ID=你的用户ID              # 例：1434078534
+
+# 可选的Telegram配置
+TG_THREAD_ID=                      # 超级群组话题ID（可选）
+TG_API_HOST=                       # 代理API地址（可选）
+TG_PROXY_HOST=                     # 代理主机（可选）
+TG_PROXY_PORT=                     # 代理端口（可选）
+TG_PROXY_AUTH=                     # 代理认证（可选）
 ```
 
-## 注意事项
+### 如何获取Telegram配置
 
-1. **DeepFlood站点验证**：由于DeepFlood是新站点，可能需要调整sitekey等参数
-2. **Cookie管理**：脚本会自动管理Cookie，无需手动更新
-3. **通知频率**：现在每个站点每天只会发送一次汇总通知
-4. **环境兼容**：支持青龙面板、Docker、GitHub Actions等多种环境
+1. **创建机器人获取Token：**
+   - 在Telegram中找到 @BotFather
+   - 发送 `/newbot` 创建新机器人
+   - 按提示设置机器人名称
+   - 获得类似 `1407203283:AAG9rt-6RDaaX0HBLZQq0laNOh898iFYaRQ` 的Token
 
-## 故障排除
+2. **获取用户ID：**
+   - 在Telegram中找到 @userinfobot
+   - 发送任意消息给它
+   - 它会回复你的用户ID，例如：`1434078534`
 
-### 如果DeepFlood登录失败
-1. 检查sitekey是否正确（可能与NodeSeek不同）
-2. 确认API接口地址是否正确
-3. 检查验证码服务配置
+3. **测试配置：**
+   - 向你的机器人发送 `/start`
+   - 确保机器人能收到消息
 
-### 如果通知仍然频繁发送
-1. 检查cookie目录是否有写入权限
-2. 确认通知状态文件是否正常创建
-3. 可以手动删除状态文件重置通知状态
+## 🚀 青龙面板完整配置流程
 
-## 建议
+### 1. 拉取仓库
+```bash
+# 在青龙面板的订阅管理中添加
+名称: 多站点签到
+类型: public仓库
+链接: https://github.com/EmersonLopez2005/nodeseek-auto-sign.git
+定时: 0 0 * * *
+白名单: multi_site_sign_cookie_only.py
+```
 
-1. **推荐使用综合脚本**：`nodeseek_sign_improved.py`可以同时处理两个站点
-2. **测试新站点**：先用少量账号测试DeepFlood站点是否正常工作
-3. **监控日志**：观察脚本运行日志，确保通知机制正常工作
-4. **备份配置**：定期备份环境变量配置，避免丢失
+### 2. 环境变量配置
+在青龙面板环境变量中添加：
+
+```bash
+# 站点Cookie配置
+NS_COOKIE=你的NodeSeek_Cookie1&你的NodeSeek_Cookie2
+DF_COOKIE=你的DeepFlood_Cookie1&你的DeepFlood_Cookie2
+
+# Telegram通知配置
+TG_BOT_TOKEN=你的机器人Token
+TG_USER_ID=你的用户ID
+
+# 可选配置
+NS_RANDOM=true
+HITOKOTO=true
+```
+
+### 3. 定时任务
+```bash
+# 每天早上8:30执行
+30 8 * * * python3 /ql/scripts/EmersonLopez2005/multi_site_sign_cookie_only.py
+```
+
+## 📝 总结
+
+你只需要上传这4个文件到GitHub：
+1. **multi_site_sign_cookie_only.py** - 主脚本
+2. **notify.py** - 通知模块（已存在）
+3. **requirements.txt** - 依赖包列表（需创建）
+4. **README.md** - 项目说明（需创建）
+
+然后在青龙面板配置Cookie和Telegram通知环境变量即可使用！
