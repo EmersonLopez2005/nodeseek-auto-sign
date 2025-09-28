@@ -3,6 +3,7 @@
 import os
 import time
 import json
+import re
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from curl_cffi import requests
@@ -24,7 +25,8 @@ SITES_CONFIG = {
         "stats_api": "https://www.nodeseek.com/api/account/credit/page-",
         "board_url": "https://www.nodeseek.com/board",
         "origin": "https://www.nodeseek.com",
-        "cookie_var": "NS_COOKIE"
+        "cookie_var": "NS_COOKIE",
+        "username_var": "NS_USERNAMES"
     },
     "deepflood": {
         "name": "DeepFlood", 
@@ -32,7 +34,8 @@ SITES_CONFIG = {
         "stats_api": "https://www.deepflood.com/api/account/credit/page-",
         "board_url": "https://www.deepflood.com/board",
         "origin": "https://www.deepflood.com",
-        "cookie_var": "DF_COOKIE"
+        "cookie_var": "DF_COOKIE",
+        "username_var": "DF_USERNAMES"
     }
 }
 
@@ -253,6 +256,16 @@ def print_signin_stats(stats, account_name):
     print(f"总获得鸡腿: {stats['total_amount']} 个")
     print(f"平均每日鸡腿: {stats['average']} 个")
 
+# ---------------- 解析用户名配置 ----------------
+def parse_usernames(usernames_str):
+    """解析用户名配置字符串"""
+    if not usernames_str:
+        return []
+    
+    # 支持多种分隔符：& | , ;
+    usernames = re.split(r'[&|,;]', usernames_str)
+    return [name.strip() for name in usernames if name.strip()]
+
 # ---------------- 处理单个站点 ----------------
 def process_site(site_name, site_config, ns_random):
     """处理单个站点的签到"""
@@ -283,15 +296,26 @@ def process_site(site_name, site_config, ns_random):
     cookie_list = all_cookies.split("&")
     cookie_list = [c.strip() for c in cookie_list if c.strip()]
     
+    # 读取用户名配置
+    usernames_str = os.getenv(site_config["username_var"], "")
+    custom_usernames = parse_usernames(usernames_str)
+    
     print(f"共发现 {len(cookie_list)} 个Cookie")
+    if custom_usernames:
+        print(f"发现 {len(custom_usernames)} 个自定义用户名: {custom_usernames}")
     
     site_results = []
     
     for i, cookie in enumerate(cookie_list):
         account_index = i + 1
-        display_user = f"账号{account_index}"
         
-        print(f"\n==== {site_config['name']} {display_user} 开始签到 ====")
+        # 确定显示名称：优先使用自定义用户名，否则使用默认名称
+        if i < len(custom_usernames):
+            display_user = custom_usernames[i]
+            print(f"\n==== {site_config['name']} {display_user} 开始签到 ====")
+        else:
+            display_user = f"账号{account_index}"
+            print(f"\n==== {site_config['name']} {display_user} 开始签到 ====")
         
         result, msg = sign(cookie, site_config, ns_random)
 
